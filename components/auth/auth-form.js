@@ -23,7 +23,6 @@ function AuthForm() {
       // login
     } else {
       resultData = await createUser(enteredEmail, enteredPass);
-      console.log(resultData);
     }
   }
 

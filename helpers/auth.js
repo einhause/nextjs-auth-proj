@@ -1,10 +1,15 @@
 import axios from 'axios';
-import { genSalt, hash } from 'bcryptjs';
+import { genSalt, hash, compare } from 'bcryptjs';
 
 export async function saltAndHash(plainTextPassword) {
   const salt = await genSalt(10);
   const encryptedPassword = await hash(plainTextPassword, salt);
   return encryptedPassword;
+}
+
+export async function verifyPassword(plainPassword, hashedPassword) {
+  const arePasswordsEqual = await compare(plainPassword, hashedPassword);
+  return arePasswordsEqual;
 }
 
 export async function createUser(email, password) {

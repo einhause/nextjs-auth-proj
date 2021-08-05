@@ -21,7 +21,6 @@ async function handler(req, res) {
   }
 
   let client;
-  let result;
 
   try {
     client = await connectDB();
@@ -31,13 +30,33 @@ async function handler(req, res) {
 
   const db = client.db();
 
+  let existingUser;
+
+  try {
+    existingUser = await db.collection('users').findOne({ email: email });
+  } catch (err) {
+    client.close();
+    res.status(500).json({ message: 'Unable to connect to server.' });
+  }
+
+  if (existingUser) {
+    res.status(422).json({
+      message: 'User already exists with that email, please try again.',
+    });
+    client.close();
+    return;
+  }
+
   let encryptedPassword;
 
   try {
     encryptedPassword = await saltAndHash(password);
   } catch (err) {
+    client.close();
     res.status(500).json({ message: 'Security error.' });
   }
+
+  let result;
 
   try {
     result = await db.collection('users').insertOne({
@@ -45,12 +64,14 @@ async function handler(req, res) {
       password: encryptedPassword,
     });
   } catch (err) {
+    client.close();
     res
       .status(500)
       .json({ message: 'Unable to insert data due to server error.' });
   }
 
   res.status(201).json({ message: 'Created user!' });
+  client.close();
 }
 
 export default handler;
